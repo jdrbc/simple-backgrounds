@@ -6,6 +6,7 @@ function setup() {
     var canvas = this.createCanvas(width, height);
     canvas.parent('theBackground');
     this.noLoop();
+    this.strokeJoin(ROUND);
 }
 
 function generate() {
@@ -34,7 +35,7 @@ function draw() {
     }
 
     var style = randElement(['targets', 'rects', 'tiles', 'circles', 'lines', 'triangles', 'points']);
-    // style = 'triangles';
+    // style = 'tiles';
     console.log(style);
     switch(style) {
         case 'targets':
@@ -68,7 +69,13 @@ function drawPoints(colors) {
     var avgHeight = avgWidth;
     var jiggleX = avgWidth / randInt(2, 6);
     var jiggleY = avgHeight / randInt(2, 6);
-    var grid = getGrid(avgWidth, avgHeight);
+    var grid;
+    var skewGrid = randInt(0, 1);
+    if (skewGrid) {
+        grid = getRandomSkewGrid(randInt(0, 100), randInt(0, 500));
+    } else {
+        grid = getGrid(avgWidth, avgHeight);
+    }
     if (randInt(0, 1)) {
         jiggleGrid(grid, jiggleX, jiggleY);
     }
@@ -99,17 +106,12 @@ function drawPoints(colors) {
 }
 
 function drawTriangles(colors) {
-    this.background(randElementAndSplice(colors));
-    this.stroke(randElementAndSplice(colors));
-
     var avgWidth = randInt(50, width - 500);
     var avgHeight = avgWidth;
-    var jiggleX = avgWidth / randInt(2, 6);
-    var jiggleY = avgHeight / randInt(2, 6);
-    var grid = getGrid(avgWidth, avgHeight);
-    if (randInt(0, 1)) {
-        jiggleGrid(grid, jiggleX, jiggleY);
-    }
+
+    var fill = randElement(colors);
+    this.background(fill);
+    this.stroke(randElementAndSplice(colors));
     if (randInt(0, 1)) {
         this.strokeWeight(0);
     } else {
@@ -119,8 +121,14 @@ function drawTriangles(colors) {
         this.strokeWeight(sw);
     }
 
+    var jiggleX = avgWidth / randInt(2, 6);
+    var jiggleY = avgHeight / randInt(2, 6);    
+    var grid = getGrid(avgWidth, avgHeight);
+    if (randInt(0, 1)) {
+        jiggleGrid(grid, jiggleX, jiggleY);
+    }
+
     var colorStrategy = randElement(['pyramids', 'random', 'gradient', 'solid']);
-    var fill = randElement(colors);
     console.log(colorStrategy);
     // tile with triangles
     var triGrid = [];
@@ -206,9 +214,8 @@ function drawTriangles(colors) {
 }
 
 function drawTiles(colors) {
-    this.background(randElementAndSplice(colors));
+    this.background(randElement(colors));
     this.stroke(randElementAndSplice(colors));
-
     var drawSquares = randInt(0, 1);
     var jiggle = randInt(0, 1);
 
@@ -216,9 +223,26 @@ function drawTiles(colors) {
     var avgHeight = drawSquares ? avgWidth : randInt(50, width - 500);
     var jiggleX = avgWidth / 3;
     var jiggleY = avgHeight / 3;
-    var grid = getGrid(avgWidth, avgHeight);
+
+    var skewGrid = true; // randInt(0, 1);
+    var grid;
+    if (skewGrid) {
+        // grid = getRandomSkewGrid(randInt(50, 100), randInt(100, width));
+        grid = getRandomSkewGrid(avgWidth, width/10);
+    } else {
+        grid = getGrid(avgWidth, avgHeight);
+    }
+
     if (jiggle) {
         jiggleGrid(grid, jiggleX, jiggleY);
+    }
+
+    if (randInt(0, 1)) {
+        this.strokeWeight(0);
+    } else {
+        // Stroke weight increases as count decreases
+        var sw = randInt(10, 200) * avgWidth / (width - 500);
+        this.strokeWeight(sw);
     }
 
     // Make squares out of the grid
@@ -232,9 +256,10 @@ function drawTiles(colors) {
         }
     }
 }
+
 function drawLines(colors) {
     this.background(randElementAndSplice(colors));
-    var count = randInt(0, 10)
+    var count = randInt(0, 10);
     var sameColor = randInt(0, 1);
     var sameDir = randInt(0, 1);
     var sameWeight = randInt(0, 1);
@@ -389,6 +414,61 @@ function getGrid(avgWidth, avgHeight) {
     }
     return grid;
 }
+
+// Return grid where horizontal & vertical lines are angled randomly 
+// minDist: The minimum distance between lines
+// maxDist: The maximum distance between lines
+function getRandomSkewGrid(minDist, maxDist) {
+    var grid = [];
+    var verticalLines = [];
+    var topX = -minDist;
+    var bottomX = -minDist;
+    verticalLines.push([this.createVector(topX, 0), this.createVector(bottomX, height)]);
+    while(topX <= width + minDist || bottomX <= width + minDist) {
+        topX = randInt(topX, topX + maxDist);
+        bottomX = randInt(bottomX, bottomX + maxDist);
+        var topPoint = this.createVector(topX, 0);
+        var bottomPoint = this.createVector(bottomX, height);
+        verticalLines.push([topPoint, bottomPoint]);
+        topX += minDist;
+        bottomX += minDist;
+    }
+    
+    var leftY = -minDist;
+    var rightY = -minDist;
+    var lineCount = 0;
+    var first = true;
+    while (leftY <= height +minDist || rightY <= height + minDist) {
+        if(!first) {
+            leftY = randInt(leftY, leftY + maxDist);
+            rightY = randInt(rightY, rightY + maxDist);
+        } else {
+            first = false;
+        }
+        var leftPoint = this.createVector(0, leftY);
+        var rightPoint = this.createVector(width, rightY);
+
+        // Add all intersects with vertical lines to grid
+        grid[lineCount] = [];
+        for (var i = 0; i < verticalLines.length; i++) {
+            var verticalLine = verticalLines[i];
+            grid[lineCount].push(getIntersection(verticalLine[0], verticalLine[1], leftPoint, rightPoint));
+        }
+        leftY += minDist;
+        rightY += minDist;
+        lineCount++;
+    }
+    return grid;
+}
+
+function getIntersection(p1, p2, p3, p4) {
+    var exp1 = ((p1.x*p2.y) - (p1.y*p2.x));
+    var exp2 = ((p3.x*p4.y) - (p3.y*p4.x));
+    var exp3 = ((p1.x - p2.x)*(p3.y - p4.y)) - ((p1.y - p2.y)*(p3.x - p4.x));
+    var x = (exp1*(p3.x - p4.x) - (p1.x - p2.x)*exp2) / exp3;
+    var y = (exp1*(p3.y - p4.y) - (p1.y - p2.y)*exp2) / exp3;
+    return this.createVector(x, y);
+}   
 
 function jiggleGrid(grid, jiggleX, jiggleY) {
     // Randomize the grid
