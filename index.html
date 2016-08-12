@@ -13,6 +13,10 @@
   <style> body {padding: 0; margin: 0;} </style>
 </head>
 <body>
-    <button onclick="download()">download</button>
+    <input id="width" value="1080" onchange="window.sizeChanged=true;"/> x <input id="height" value="1920" onchange="window.sizeChanged=true;"/>
+    <button onclick="generate();">generate</button>
+    Number of images to include in zip (slow and breaks if too many images requested):<input id="fileCount" value="50"/>
+    <button onclick="download();">download</button>
+    <div id="theBackground"/>
 </body>
 </html>

@@ -1,9 +1,22 @@
 /* globals width: false, height: false, ColorScheme: false, JSZip: false */
 
 function setup() {
-    this.createCanvas(1080, 1920);
-    // this.createCanvas(1440, 2560);
+    var width = parseInt(document.getElementById('width').value);
+    var height = parseInt(document.getElementById('height').value);
+    var canvas = this.createCanvas(width, height);
+    canvas.parent('theBackground');
     this.noLoop();
+}
+
+function generate() {
+    if (window.sizeChanged) {
+        var width = parseInt(document.getElementById('width').value);
+        var height = parseInt(document.getElementById('height').value);
+        resizeCanvas(width, height);
+        window.sizeChanged = false;
+    } else {
+        draw();
+    }
 }
 
 function draw() {
@@ -129,29 +142,31 @@ function drawTriangles(colors) {
 
     var k = 0;
     var l = 0;
-    var triGridWidth = triGrid[0].length;
-    var triGridHieght = triGrid.length;
-    var fill = randElement(colors);
-    var shadeStep = 100 / (16 * (triGridWidth + triGridHieght));
-    if (randInt(0, 1)) {
-        shadeStep *= -1;
-        fill = shadeColor(fill, 50);
-    } else {
-        fill = shadeColor(fill, -50);
-    }
-    while(l < triGridWidth) {
-        for (var kc = k, lc = l; kc >= 0 && lc < triGridWidth; kc--, lc++) {
-            if (triGrid[kc] && triGrid[kc][lc]) {
-                fill = shadeColor(fill, shadeStep);
-                this.fill(fill);
-                triGrid[kc][lc].draw();
-            }
-        }
-
-        if (k < triGridHieght) {
-            k++;
+    if (triGrid.length > 0 && triGrid[0].length > 0) {
+        var triGridWidth = triGrid[0].length;
+        var triGridHieght = triGrid.length;
+        var fill = randElement(colors);
+        var shadeStep = 100 / (16 * (triGridWidth + triGridHieght));
+        if (randInt(0, 1)) {
+            shadeStep *= -1;
+            fill = shadeColor(fill, 50);
         } else {
-            l++;
+            fill = shadeColor(fill, -50);
+        }
+        while(l < triGridWidth) {
+            for (var kc = k, lc = l; kc >= 0 && lc < triGridWidth; kc--, lc++) {
+                if (triGrid[kc] && triGrid[kc][lc]) {
+                    fill = shadeColor(fill, shadeStep);
+                    this.fill(fill);
+                    triGrid[kc][lc].draw();
+                }
+            }
+
+            if (k < triGridHieght) {
+                k++;
+            } else {
+                l++;
+            }
         }
     }
 }
@@ -352,10 +367,10 @@ function jiggleGrid(grid, jiggleX, jiggleY) {
 }
 
 var zip = new JSZip();
-zip.fileCount = 0;
 function download() {
     console.log('saving!');
-    var fileCount = 100;
+    var fileCount = document.getElementById('fileCount').value;
+    zip.fileCount = 0;
     for (var i = 0; i < fileCount; i++) {
         var canvas = document.getElementById('defaultCanvas0');
         canvas.toBlob(getCanvasBlobCallback(fileCount));
@@ -375,55 +390,6 @@ function getCanvasBlobCallback(fileCount) {
             );
         }
     };
-}
-
-// Return the element of num that is nearest to num
-function getNearest(num, numArr) {
-    numArr.sort();
-    var minDist = Math.abs(numArr[0] - num);
-    for (var i = 1; i < numArr.length; i++) {
-        var dist = Math.abs(numArr[i] - num);
-        if (dist > minDist) {
-            break; // found the nearest number
-        }
-    }
-    return numArr[i];
-}
-
-function getDivisors(y) {
-    var divisors = [];
-    var sqroot = Math.sqrt(y);
-    for (var i = 1; i <= sqroot; i++) {    
-        if (y % i === 0) {
-            divisors.push(i);
-        }
-    }
-    var pairs = [];
-    for (var j = divisors.length - 1; j >= 0; j--) {
-        if (sqroot !== divisors[j]) {
-            pairs.push(y / divisors[j]);
-        } 
-    }
-    return divisors.concat(pairs);
-}
-
-
-function intersect(a, b) {
-  var ai=0, bi=0;
-  var result = [];
-
-  while( ai < a.length && bi < b.length ) {
-     if      (a[ai] < b[bi] ){ ai++; }
-     else if (a[ai] > b[bi] ){ bi++; }
-     else /* they're equal */
-     {
-       result.push(a[ai]);
-       ai++;
-       bi++;
-     }
-  }
-
-  return result;
 }
 
 class Triangle {
