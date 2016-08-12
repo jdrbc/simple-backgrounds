@@ -11,6 +11,7 @@ function setup() {
 }
 
 function generate() {
+    clear();
     if (window.sizeChanged) {
         var width = parseInt(document.getElementById('width').value);
         var height = parseInt(document.getElementById('height').value);
@@ -490,13 +491,13 @@ function download() {
     for (var i = 0; i < fileCount; i++) {
         var canvas = document.getElementById('defaultCanvas0');
         canvas.toBlob(getCanvasBlobCallback(fileCount));
-        draw();
+        generate();
     }
 }
 
 function getCanvasBlobCallback(fileCount) {
     return function(blob) {
-        zip.file('img-' + zip.fileCount + '.png', blob);
+        zip.file('img-' + zip.fileCount + '-of-' + fileCount + '.png', blob);
         zip.fileCount++;
         if (zip.fileCount == fileCount) {
             zip.generateAsync({type:"blob"})
