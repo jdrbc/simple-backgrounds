@@ -7,6 +7,7 @@ function setup() {
     canvas.parent('theBackground');
     this.noLoop();
     this.strokeJoin(ROUND);
+    this.blendMode(randElement([LIGHTEST, MULTIPLY, ADD, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, REPLACE, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN]));
 }
 
 function generate() {
@@ -303,6 +304,7 @@ function drawRects(colors) {
     this.background(randElement(colors));
     this.stroke(randElement(colors));
     this.strokeWeight(randInt(0, 100));
+    this.strokeJoin(randElement([MITER, BEVEL, ROUND]));
 
     var minX = 0;
     var maxX = width;
