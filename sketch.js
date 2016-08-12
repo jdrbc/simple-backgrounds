@@ -115,10 +115,13 @@ function drawTriangles(colors) {
     } else {
         // Don't make strokes so big that there are no triangles
         // Stroke weight increases as count decreases
-        var sw = randInt(10, 100) * avgWidth / (width - 500);
+        var sw = randInt(10, 75) * avgWidth / (width - 500);
         this.strokeWeight(sw);
     }
 
+    var colorStrategy = randElement(['pyramids', 'random', 'gradient', 'solid']);
+    var fill = randElement(colors);
+    console.log(colorStrategy);
     // tile with triangles
     var triGrid = [];
     for (var i = 0; i < grid.length - 1; i++) {
@@ -131,41 +134,72 @@ function drawTriangles(colors) {
             var p4 = grid[i][j+1];
             var midX = (p1.x + p2.x + p3.x + p4.x) / 4;
             var midY = (p1.y + p2.y + p3.y + p4.y) / 4;
-            triGridR1.push(new Triangle(this, midX, midY, p1.x, p1.y, p2.x, p2.y));
-            triGridR2.push(new Triangle(this, midX, midY, p2.x, p2.y, p3.x, p3.y));
-            triGridR2.push(new Triangle(this, midX, midY, p3.x, p3.y, p4.x, p4.y));
-            triGridR1.push(new Triangle(this, midX, midY, p1.x, p1.y, p4.x, p4.y));
+            var t1 = new Triangle(this, midX, midY, p1.x, p1.y, p2.x, p2.y);
+            var t2 = new Triangle(this, midX, midY, p2.x, p2.y, p3.x, p3.y);
+            var t3 = new Triangle(this, midX, midY, p3.x, p3.y, p4.x, p4.y);
+            var t4 = new Triangle(this, midX, midY, p1.x, p1.y, p4.x, p4.y);
+
+            switch(colorStrategy) {
+                case 'gradient':
+                    triGridR1.push(t1);
+                    triGridR2.push(t2);
+                    triGridR2.push(t3);
+                    triGridR1.push(t4);
+                    break;
+                case 'random':
+                    var tris = [t1, t2, t3, t4];
+                    for (var triIndex in [t1, t2, t3, t4]) {
+                        this.fill(shadeColor(fill, randInt(-50, 50)));
+                        tris[triIndex].draw();
+                    }
+                    break;
+                case 'pyramids':
+                    this.fill(shadeColor(fill, 25));
+                    t1.draw();
+                    this.fill(fill);
+                    t2.draw();
+                    t4.draw();
+                    this.fill(shadeColor(fill, -25));
+                    t3.draw();
+                    break;
+                case 'solid':
+                    t1.draw();
+                    t2.draw();
+                    t4.draw();
+                    t3.draw();                    
+            }
         }
         triGrid.push(triGridR1);
         triGrid.push(triGridR2);
     }
 
-    var k = 0;
-    var l = 0;
-    if (triGrid.length > 0 && triGrid[0].length > 0) {
-        var triGridWidth = triGrid[0].length;
-        var triGridHieght = triGrid.length;
-        var fill = randElement(colors);
-        var shadeStep = 100 / (16 * (triGridWidth + triGridHieght));
-        if (randInt(0, 1)) {
-            shadeStep *= -1;
-            fill = shadeColor(fill, 50);
-        } else {
-            fill = shadeColor(fill, -50);
-        }
-        while(l < triGridWidth) {
-            for (var kc = k, lc = l; kc >= 0 && lc < triGridWidth; kc--, lc++) {
-                if (triGrid[kc] && triGrid[kc][lc]) {
-                    fill = shadeColor(fill, shadeStep);
-                    this.fill(fill);
-                    triGrid[kc][lc].draw();
-                }
-            }
-
-            if (k < triGridHieght) {
-                k++;
+    if (colorStrategy == 'gradient') {
+        var k = 0;
+        var l = 0;
+        if (triGrid.length > 0 && triGrid[0].length > 0) {
+            var triGridWidth = triGrid[0].length;
+            var triGridHieght = triGrid.length;
+            var shadeStep = 100 / (16 * (triGridWidth + triGridHieght));
+            if (randInt(0, 1)) {
+                shadeStep *= -1;
+                fill = shadeColor(fill, 50);
             } else {
-                l++;
+                fill = shadeColor(fill, -50);
+            }
+            while(l < triGridWidth) {
+                fill = shadeColor(fill, shadeStep);
+                for (var kc = k, lc = l; kc >= 0 && lc < triGridWidth; kc--, lc++) {
+                    if (triGrid[kc] && triGrid[kc][lc]) {
+                        this.fill(fill);
+                        triGrid[kc][lc].draw();
+                    }
+                }
+
+                if (k < triGridHieght) {
+                    k++;
+                } else {
+                    l++;
+                }
             }
         }
     }
