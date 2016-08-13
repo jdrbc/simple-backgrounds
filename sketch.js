@@ -37,7 +37,7 @@ function draw() {
     }
 
     var style = randElement(['targets', 'rects', 'tiles', 'circles', 'lines', 'triangles', 'points', 'terrain']);
-    style = 'terrain';
+    // style = 'terrain';
     console.log(style);
     switch(style) {
         case 'targets':
