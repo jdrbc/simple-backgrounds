@@ -36,8 +36,8 @@ function draw() {
         colors[j] = '#' + colors[j];
     }
 
-    var style = randElement(['targets', 'rects', 'tiles', 'circles', 'lines', 'triangles', 'points']);
-    // style = 'tiles';
+    var style = randElement(['targets', 'rects', 'tiles', 'circles', 'lines', 'triangles', 'points', 'terrain']);
+    style = 'terrain';
     console.log(style);
     switch(style) {
         case 'targets':
@@ -61,6 +61,68 @@ function draw() {
         case 'points':
             drawPoints(colors);
             break;
+        case 'terrain':
+            drawTerrain(colors);
+            break;
+    }
+}
+
+function drawTerrain(colors) {
+    var color = randElementAndSplice(colors);
+    this.blendMode(REPLACE);
+    var dayScene = randInt(0, 1);
+    var sky;
+    var terrain;
+    if (dayScene) {
+        sky = shadeColor(color, -0.50);
+        terrain = shadeColor(color, 0.50);
+    } else {
+        sky = shadeColor(color, 0.50);
+        terrain = shadeColor(color, -0.50);
+    }
+
+    for (var y = 0; y < height; y++) {
+        if (dayScene) {
+            this.stroke(shadeColor(sky, (y / height) * -90));
+        } else {
+            this.stroke(shadeColor(sky, (y / height) * 90));
+        }
+        this.line(0, y, width, y);
+    }
+
+    // TODO have further mountains shade to color of sky!
+    var sameColor = randInt(0, 1);
+    if (!sameColor) {
+        terrain = randElement(colors);
+    } else {
+        terrain = sky;
+    }
+
+    if (dayScene) {
+        terrain = shadeColor(color, 0.50);
+    } else {
+        terrain = shadeColor(color, -0.50);
+    }
+
+    var smoothness = randInt(1, 30) / 10000;
+    var constantSmoothness = randInt(0, 1);
+    var hillCount = randInt(1, 5);
+    // Draw hills back to front
+    for (var i = 1; i <= hillCount; i++) {
+        // Make hill darker the closer it is
+        terrain = shadeColor(terrain, 10);
+        this.stroke(terrain);
+        if (!constantSmoothness) {
+            // Make hill smoother the closer it is
+            smoothness = smoothness / 2;
+        }
+        for (var x = 0; x < width; x += 0.5) {
+            var noiseValue = this.noise(x * smoothness, i);
+            var y2 = noiseValue * height;
+            // Move hill further down the screen the closer it is
+            y2 += (height * i / 10);
+            this.line(x, y2, x, height);
+        }
     }
 }
 
@@ -229,7 +291,6 @@ function drawTiles(colors) {
     var skewGrid = true; // randInt(0, 1);
     var grid;
     if (skewGrid) {
-        // grid = getRandomSkewGrid(randInt(50, 100), randInt(100, width));
         grid = getRandomSkewGrid(avgWidth, width/10);
     } else {
         grid = getGrid(avgWidth, avgHeight);
