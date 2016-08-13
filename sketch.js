@@ -99,9 +99,9 @@ function drawTerrain(colors) {
     }
 
     if (dayScene) {
-        terrain = shadeColor(color, 0.50);
+        terrain = shadeColor(terrain, 0.50);
     } else {
-        terrain = shadeColor(color, -0.50);
+        terrain = shadeColor(terrain, -0.50);
     }
 
     var smoothness = randInt(1, 30) / 10000;
