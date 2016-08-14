@@ -26,11 +26,9 @@ function draw() {
     var schemes = ['analogic', 'mono', 'contrast', 'triade', 'tetrade'];
     var variations = ['default', 'pastel', 'soft', 'light', 'hard', 'pale'];
     var scheme = new ColorScheme();
-    // var princessBlue = '211';
     scheme.from_hue(randInt(0, 255))         
         .scheme(randElement(schemes))
-        .variation(randElement(variations))   
-        .variation('soft');
+        .variation(randElement(variations));
     var colors = scheme.colors();
     for (var j = 0; j < colors.length; j++) {
         colors[j] = '#' + colors[j];
@@ -62,55 +60,44 @@ function draw() {
             drawPoints(colors);
             break;
         case 'terrain':
-            drawTerrain(colors);
+            drawTerrain();
             break;
     }
 }
 
-function drawTerrain(colors) {
-    var color = randElementAndSplice(colors);
-    this.blendMode(REPLACE);
-    var dayScene = randInt(0, 1);
-    var sky;
-    var terrain;
-    if (dayScene) {
-        sky = shadeColor(color, -0.50);
-        terrain = shadeColor(color, 0.50);
-    } else {
-        sky = shadeColor(color, 0.50);
-        terrain = shadeColor(color, -0.50);
+function drawTerrain() {
+    var schemes = ['tetrade', 'triade'];
+    var variations = ['default', 'pastel', 'soft', 'light', 'hard', 'pale'];
+    var scheme = new ColorScheme();
+    // var princessBlue = '211';
+    scheme.from_hue(randInt(0, 255))         
+        .scheme(randElement(schemes))
+        .variation(randElement(variations));
+    var colors = scheme.colors();
+    for (var j = 0; j < colors.length; j++) {
+        colors[j] = '#' + colors[j];
     }
 
+    this.blendMode(REPLACE);
+    var sky = randElementAndSplice(colors);
+
     for (var y = 0; y < height; y++) {
-        if (dayScene) {
-            this.stroke(shadeColor(sky, (y / height) * -90));
-        } else {
-            this.stroke(shadeColor(sky, (y / height) * 90));
-        }
+        // darken towards bottom
+        var next = shadeColor(sky, (y / height) * 25);
+        this.stroke(next);
         this.line(0, y, width, y);
     }
 
-    // TODO have further mountains shade to color of sky!
-    var sameColor = randInt(0, 1);
-    if (!sameColor) {
-        terrain = randElement(colors);
-    } else {
-        terrain = sky;
-    }
-
-    if (dayScene) {
-        terrain = shadeColor(terrain, 0.50);
-    } else {
-        terrain = shadeColor(terrain, -0.50);
-    }
+    var terrain = randElement(colors);
+    terrain = tintColor(terrain, sky, 80);
 
     var smoothness = randInt(1, 30) / 10000;
     var constantSmoothness = randInt(0, 1);
-    var hillCount = randInt(1, 5);
+    var hillCount = 5; //randInt(1, 5);
     // Draw hills back to front
     for (var i = 1; i <= hillCount; i++) {
         // Make hill darker the closer it is
-        terrain = shadeColor(terrain, 10);
+        terrain = tintColor(terrain, sky, -40);
         this.stroke(terrain);
         if (!constantSmoothness) {
             // Make hill smoother the closer it is
@@ -448,23 +435,39 @@ function randInt(low, high) {
 }
 
 function shadeColor(color, percent) {
+    return tintColor(color, '#000000', percent);
+}
+
+function tintColor(color, tintColor, percent) {
+    percent = percent / 100;
+    var rgbColor = rgbToInts(color);
+    var rgbTintColor = rgbToInts(tintColor);
+
+    rgbColor.r += parseInt((rgbTintColor.r - rgbColor.r) * percent);
+    rgbColor.g += parseInt((rgbTintColor.g - rgbColor.g) * percent);
+    rgbColor.b += parseInt((rgbTintColor.b - rgbColor.b) * percent);
+
+    rgbColor.r = (rgbColor.r<255)?rgbColor.r:255;  
+    rgbColor.g = (rgbColor.g<255)?rgbColor.g:255;  
+    rgbColor.b = (rgbColor.b<255)?rgbColor.b:255;
+
+    rgbColor.r = (rgbColor.r>0)?rgbColor.r:0;  
+    rgbColor.g = (rgbColor.g>0)?rgbColor.g:0;  
+    rgbColor.b = (rgbColor.b>0)?rgbColor.b:0;
+
+    var RR = ((rgbColor.r.toString(16).length==1)?"0"+rgbColor.r.toString(16):rgbColor.r.toString(16));
+    var GG = ((rgbColor.g.toString(16).length==1)?"0"+rgbColor.g.toString(16):rgbColor.g.toString(16));
+    var BB = ((rgbColor.b.toString(16).length==1)?"0"+rgbColor.b.toString(16):rgbColor.b.toString(16));
+
+    return "#"+RR+GG+BB;
+}
+
+function rgbToInts(color) {
     var R = parseInt(color.substring(1,3),16);
     var G = parseInt(color.substring(3,5),16);
     var B = parseInt(color.substring(5,7),16);
 
-    R = parseInt(R * (100 + percent) / 100);
-    G = parseInt(G * (100 + percent) / 100);
-    B = parseInt(B * (100 + percent) / 100);
-
-    R = (R<255)?R:255;  
-    G = (G<255)?G:255;  
-    B = (B<255)?B:255;  
-
-    var RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
-    var GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
-    var BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
-
-    return "#"+RR+GG+BB;
+    return {r: R, g: G, b: B};
 }
 
 function getGrid(avgWidth, avgHeight) {
