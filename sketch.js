@@ -7,7 +7,7 @@ function setup() {
     canvas.parent('theBackground');
     this.noLoop();
     this.strokeJoin(ROUND);
-    this.blendMode(randElement([LIGHTEST, MULTIPLY, ADD, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, REPLACE, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN]));
+    this.blendMode(randElement([MULTIPLY, ADD, DIFFERENCE, EXCLUSION, SCREEN, REPLACE, OVERLAY]));
 }
 
 function generate() {
@@ -35,7 +35,6 @@ function draw() {
     }
 
     var style = randElement(['targets', 'rects', 'tiles', 'circles', 'lines', 'triangles', 'points', 'terrain']);
-    // style = 'terrain';
     console.log(style);
     switch(style) {
         case 'targets':
@@ -78,7 +77,7 @@ function drawTerrain() {
         colors[j] = '#' + colors[j];
     }
 
-    this.blendMode(REPLACE);
+    this.blendMode(MULTIPLY);
     var sky = randElementAndSplice(colors);
 
     for (var y = 0; y < height; y++) {
