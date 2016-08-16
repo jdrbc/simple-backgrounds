@@ -77,7 +77,7 @@ function drawTerrain() {
         colors[j] = '#' + colors[j];
     }
 
-    this.blendMode(MULTIPLY);
+    this.blendMode(REPLACE);
     var sky = randElementAndSplice(colors);
 
     for (var y = 0; y < height; y++) {
